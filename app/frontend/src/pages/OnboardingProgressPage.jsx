@@ -1,15 +1,44 @@
 import React from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { AuthContext, apiFetch } from "../main.jsx";
-import { Layout, StatusBadge, LoadingSpinner, ErrorMessage } from "../components/Layout.jsx";
+import { Layout, StatusBadge, LoadingSpinner, ErrorBanner, EmptyState } from "../components/Layout.jsx";
 import { TrendingUp, CheckCircle, Circle, Clock, SkipForward } from "lucide-react";
 
-const STATUS_ICON = {
-  done: <CheckCircle size={16} className="text-green" />,
-  in_progress: <Clock size={16} className="text-blue" />,
-  todo: <Circle size={16} className="text-gray" />,
-  skipped: <SkipForward size={16} className="text-gray" />,
-};
+function StatusIcon({ status }) {
+  if (status === "done") return <CheckCircle size={16} style={{ color: "var(--green)", flexShrink: 0 }} />;
+  if (status === "in_progress") return <Clock size={16} style={{ color: "var(--accent)", flexShrink: 0 }} />;
+  if (status === "skipped") return <SkipForward size={16} style={{ color: "var(--muted)", flexShrink: 0 }} />;
+  return <Circle size={16} style={{ color: "var(--muted-light)", flexShrink: 0 }} />;
+}
+
+function DonutChart({ percentage }) {
+  const numericPercentage = Number(percentage);
+  const safePercentage = Number.isFinite(numericPercentage) ? Math.max(0, Math.min(100, numericPercentage)) : 0;
+  const r = 40;
+  const circ = 2 * Math.PI * r;
+  const dashArray = `${circ * safePercentage / 100} ${circ * (1 - safePercentage / 100)}`;
+
+  return (
+    <svg viewBox="0 0 100 100" className="donut-svg" role="img" aria-label={`${safePercentage}% complete`}>
+      <circle cx="50" cy="50" r={r} fill="none" stroke="var(--border)" strokeWidth="12" />
+      <circle
+        cx="50" cy="50" r={r} fill="none"
+        stroke="var(--accent)" strokeWidth="12"
+        strokeDasharray={dashArray}
+        strokeLinecap="round"
+        transform="rotate(-90 50 50)"
+        style={{ transition: "stroke-dasharray 0.6s ease" }}
+      />
+      <text
+        x="50" y="50" textAnchor="middle" dy="0.35em"
+        fontSize="16" fontWeight="800" fill="var(--text)"
+        style={{ transform: "rotate(0deg)" }}
+      >
+        {safePercentage}%
+      </text>
+    </svg>
+  );
+}
 
 export default function OnboardingProgressPage() {
   const { token } = React.useContext(AuthContext);
@@ -44,75 +73,97 @@ export default function OnboardingProgressPage() {
     advanced: tasks.filter((t) => t.difficulty === "advanced"),
   };
 
-  return (
-    <Layout title="My Onboarding Progress">
-      <ErrorMessage message={error} onDismiss={() => setError("")} />
+  const inProgress = Object.values(progressMap).filter((p) => p.status === "in_progress").length;
+  const skipped = Object.values(progressMap).filter((p) => p.status === "skipped").length;
 
-      {/* Summary */}
-      <div className="progress-summary">
+  return (
+    <Layout
+      title="My Onboarding Progress"
+      subtitle="Track your journey through the repository"
+      breadcrumb={[
+        { to: "/dashboard", label: "Dashboard" },
+        { to: `/repository/${repoId}`, label: "Repository" },
+        { label: "My Progress" },
+      ]}
+    >
+      <ErrorBanner message={error} onDismiss={() => setError("")} />
+
+      {/* Progress hero */}
+      <div className="progress-hero">
         <div className="progress-donut-wrap">
-          <svg viewBox="0 0 100 100" className="donut-svg">
-            <circle cx="50" cy="50" r="40" fill="none" stroke="#e5e7eb" strokeWidth="12" />
-            <circle
-              cx="50" cy="50" r="40" fill="none"
-              stroke="#3b82d4" strokeWidth="12"
-              strokeDasharray={`${2 * Math.PI * 40 * summary.percentage / 100} ${2 * Math.PI * 40 * (1 - summary.percentage / 100)}`}
-              strokeLinecap="round"
-              transform="rotate(-90 50 50)"
-            />
-            <text x="50" y="50" textAnchor="middle" dy="0.35em" className="donut-label" fontSize="18" fontWeight="700" fill="#1f2328">
-              {summary.percentage}%
-            </text>
-          </svg>
+          <DonutChart percentage={summary.percentage} />
         </div>
-        <div className="progress-stats">
-          <div className="stat-box">
-            <span className="stat-number text-green">{summary.completed_tasks}</span>
-            <span className="stat-label">Tasks Completed</span>
+        <div className="progress-hero-stats">
+          <div className="progress-stat">
+            <span className="progress-stat-value" style={{ color: "var(--green)" }}>
+              {summary.completed_tasks}
+            </span>
+            <span className="progress-stat-label">Completed</span>
           </div>
-          <div className="stat-box">
-            <span className="stat-number">{summary.total_tasks - summary.completed_tasks}</span>
-            <span className="stat-label">Remaining</span>
+          <div className="progress-stat">
+            <span className="progress-stat-value" style={{ color: "var(--accent)" }}>
+              {inProgress}
+            </span>
+            <span className="progress-stat-label">In Progress</span>
           </div>
-          <div className="stat-box">
-            <span className="stat-number">{summary.total_tasks}</span>
-            <span className="stat-label">Total Tasks</span>
+          <div className="progress-stat">
+            <span className="progress-stat-value">
+              {Math.max(0, summary.total_tasks - summary.completed_tasks - inProgress - skipped)}
+            </span>
+            <span className="progress-stat-label">Remaining</span>
+          </div>
+          <div className="progress-stat">
+            <span className="progress-stat-value">{summary.total_tasks}</span>
+            <span className="progress-stat-label">Total</span>
           </div>
         </div>
       </div>
 
-      {/* By difficulty */}
-      {Object.entries(byDifficulty).map(([diff, diffTasks]) => (
-        diffTasks.length > 0 && (
-          <div key={diff} className="card">
-            <h3 className="card-title">
-              <span className={`difficulty-dot difficulty-${diff}`} />
-              {diff.charAt(0).toUpperCase() + diff.slice(1)} Tasks
-              <span className="text-muted text-sm ml-auto">
-                {diffTasks.filter((t) => progressMap[t.id]?.status === "done").length}/{diffTasks.length}
-              </span>
-            </h3>
-            <div className="progress-task-list">
-              {diffTasks.map((task) => {
-                const p = progressMap[task.id];
-                const status = p?.status || "todo";
-                return (
-                  <div key={task.id} className={`progress-task-row status-${status}`}>
-                    {STATUS_ICON[status]}
-                    <span className="task-name">{task.title}</span>
-                    <StatusBadge status={status} />
-                  </div>
-                );
-              })}
+      {tasks.length === 0 ? (
+        <EmptyState
+          icon={<TrendingUp size={28} />}
+          title="No tasks available yet"
+          description="Task progress will appear here after repository analysis completes and tasks are generated."
+          action={
+            <Link to={`/repository/${repoId}/tasks`} className="btn btn-primary">
+              View Starter Tasks
+            </Link>
+          }
+        />
+      ) : (
+        Object.entries(byDifficulty).map(([diff, diffTasks]) =>
+          diffTasks.length > 0 && (
+            <div key={diff} className="progress-section">
+              <div className="progress-section-header">
+                <div className="progress-section-title">
+                  <span
+                    style={{
+                      width: 10, height: 10, borderRadius: "50%", flexShrink: 0,
+                      background: diff === "beginner" ? "var(--green)" : diff === "intermediate" ? "var(--amber)" : "var(--red)",
+                      display: "inline-block",
+                    }}
+                  />
+                  {diff.charAt(0).toUpperCase() + diff.slice(1)} Tasks
+                </div>
+                <span className="progress-section-count">
+                  {diffTasks.filter((t) => progressMap[t.id]?.status === "done").length}/{diffTasks.length} done
+                </span>
+              </div>
+              <div className="progress-task-list">
+                {diffTasks.map((task) => {
+                  const status = progressMap[task.id]?.status || "todo";
+                  return (
+                    <div key={task.id} className={`progress-task-item status-${status}`}>
+                      <StatusIcon status={status} />
+                      <span className="progress-task-name">{task.title}</span>
+                      <StatusBadge status={status} />
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          )
         )
-      ))}
-
-      {tasks.length === 0 && (
-        <div className="card text-muted">
-          No tasks available yet. Wait for the repository analysis to complete.
-        </div>
       )}
     </Layout>
   );

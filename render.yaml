@@ -13,7 +13,11 @@ services:
       sizeGB: 1
 
     envVars:
+<<<<<<< HEAD
       # === Supabase ===
+=======
+      # === Supabase (set values in Render dashboard) ===
+>>>>>>> 9b10423a556b5fbe6f18f9ee9a8eb3ac13da2236
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_KEY
@@ -23,17 +27,29 @@ services:
       - key: SUPABASE_DB_URL
         sync: false
 
+<<<<<<< HEAD
       # === LLM (Groq) ===
       - key: GROQ_API_KEY
         sync: false
 
       # === GitHub ===
+=======
+      # === LLM (set values in Render dashboard) ===
+      - key: GROQ_API_KEY
+        sync: false
+
+      # === GitHub (set values in Render dashboard) ===
+>>>>>>> 9b10423a556b5fbe6f18f9ee9a8eb3ac13da2236
       - key: GITHUB_TOKEN
         sync: false
       - key: GITHUB_MCP_ALLOW_WRITE
         value: "false"
 
+<<<<<<< HEAD
       # === DevOnboard Analysis Settings ===
+=======
+      # === DevOnboard Analysis ===
+>>>>>>> 9b10423a556b5fbe6f18f9ee9a8eb3ac13da2236
       - key: DEVONBOARD_LLM_MODEL
         value: "openai/gpt-oss-20b"
       - key: ANALYSIS_MAX_FILE_SIZE_KB
@@ -41,8 +57,13 @@ services:
       - key: ANALYSIS_MAX_FILES
         value: "200"
 
+<<<<<<< HEAD
       # === CORS ===
       # Add your Render service URL once deployed, e.g. https://devonboard-ai.onrender.com
+=======
+      # === CORS — set to your Render service URL in the dashboard ===
+      # e.g. https://devonboard-ai.onrender.com
+>>>>>>> 9b10423a556b5fbe6f18f9ee9a8eb3ac13da2236
       - key: CORS_ALLOWED_ORIGINS
         sync: false
 
@@ -52,6 +73,17 @@ services:
       - key: RAG_INDEX_REPO
         value: "false"
 
+<<<<<<< HEAD
+=======
+      # === Mem0 Long-Term Memory ===
+      - key: MEM0_ENABLED
+        value: "false"
+      - key: MEM0_LLM_MODEL
+        value: "llama-3.3-70b-versatile"
+      - key: MEM0_EMBEDDING_MODEL
+        value: "BAAI/bge-small-en-v1.5"
+
+>>>>>>> 9b10423a556b5fbe6f18f9ee9a8eb3ac13da2236
       # === LangSmith Tracing ===
       - key: LANGSMITH_TRACING
         value: "true"
@@ -61,6 +93,7 @@ services:
         value: devonboard-ai
       - key: LANGSMITH_ENDPOINT
         value: https://api.smith.langchain.com
+<<<<<<< HEAD
 
       # === Mem0 Long-Term Memory ===
       - key: MEM0_ENABLED
@@ -71,3 +104,5 @@ services:
         value: "BAAI/bge-small-en-v1.5"
       - key: MEM0_HISTORY_DB_PATH
         value: "/app/data/mem0-history.db"
+=======
+>>>>>>> 9b10423a556b5fbe6f18f9ee9a8eb3ac13da2236
