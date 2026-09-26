@@ -1,13 +1,17 @@
 import React from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { AuthContext, apiFetch } from "../main.jsx";
-import { Layout, StatusBadge, LoadingSpinner, ErrorMessage } from "../components/Layout.jsx";
-import { GitBranch, Layers, Terminal, ListTodo, MessageSquare, TrendingUp, ExternalLink, RefreshCw, Code, Database, Globe, Box, Star } from "lucide-react";
+import { Layout, StatusBadge, LoadingSpinner, ErrorBanner, useToast } from "../components/Layout.jsx";
+import {
+  GitBranch, Layers, Terminal, ListTodo, MessageSquare, TrendingUp,
+  ExternalLink, RefreshCw, Code, Database, Box, AlertTriangle, Star
+} from "lucide-react";
 
 export default function RepositoryOverviewPage() {
   const { token } = React.useContext(AuthContext);
   const { repoId } = useParams();
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [data, setData] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState("");
@@ -16,128 +20,170 @@ export default function RepositoryOverviewPage() {
     try {
       const result = await apiFetch(`/analysis/${repoId}/results`, {}, token);
       setData(result);
+      // If still analyzing, redirect to progress page
+      if (result.repository?.status === "analyzing") {
+        navigate(`/repository/${repoId}/analyzing`);
+      }
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  }, [repoId, token]);
+  }, [repoId, token, navigate]);
 
   React.useEffect(() => {
     fetchData();
-    let interval;
-    if (data?.repository?.status === "analyzing") {
-      interval = setInterval(fetchData, 5000);
+  }, [fetchData]);
+
+  async function triggerAnalysis() {
+    try {
+      await apiFetch(`/analysis/${repoId}/trigger`, { method: "POST" }, token);
+      showToast("Analysis started!", "success");
+      navigate(`/repository/${repoId}/analyzing`);
+    } catch (err) {
+      showToast(err.message, "error");
     }
-    return () => clearInterval(interval);
-  }, [fetchData, data?.repository?.status]);
+  }
 
   if (loading) return <Layout title="Repository Overview"><LoadingSpinner text="Loading repository data..." /></Layout>;
 
   const repo = data?.repository;
   const analysis = data?.analysis;
 
-  if (!repo) return <Layout title="Repository Overview"><ErrorMessage message="Repository not found." /></Layout>;
+  if (!repo) return (
+    <Layout title="Repository Overview">
+      <ErrorBanner message={error || "Repository not found."} />
+    </Layout>
+  );
 
   const stack = analysis?.technology_stack || {};
-  const langs = Object.entries(stack.languages || {}).slice(0, 6);
+  const langs = Object.entries(stack.languages || {}).slice(0, 8);
   const frameworks = stack.frameworks || [];
   const infra = stack.infrastructure || [];
   const databases = analysis?.database_info?.databases || [];
 
   const navCards = [
-    { to: `/repository/${repoId}/architecture`, icon: <Layers size={20} />, label: "Architecture", desc: "Visual component breakdown" },
-    { to: `/repository/${repoId}/setup`, icon: <Terminal size={20} />, label: "Setup Guide", desc: "Step-by-step instructions" },
-    { to: `/repository/${repoId}/tasks`, icon: <ListTodo size={20} />, label: "Starter Tasks", desc: "Beginner-friendly contributions" },
-    { to: `/repository/${repoId}/qa`, icon: <MessageSquare size={20} />, label: "Codebase Q&A", desc: "Ask questions about the code" },
-    { to: `/repository/${repoId}/progress`, icon: <TrendingUp size={20} />, label: "My Progress", desc: "Track your onboarding journey" },
+    { to: `/repository/${repoId}/architecture`, icon: <Layers size={20} />, label: "Architecture", desc: "Visual component breakdown", available: !!analysis },
+    { to: `/repository/${repoId}/setup`, icon: <Terminal size={20} />, label: "Setup Guide", desc: "Step-by-step instructions", available: !!analysis },
+    { to: `/repository/${repoId}/tasks`, icon: <ListTodo size={20} />, label: "Starter Tasks", desc: "Beginner-friendly contributions", available: !!analysis },
+    { to: `/repository/${repoId}/qa`, icon: <MessageSquare size={20} />, label: "Codebase Q&A", desc: "Ask questions about the code", available: !!analysis },
+    { to: `/repository/${repoId}/progress`, icon: <TrendingUp size={20} />, label: "My Progress", desc: "Track your onboarding journey", available: true },
   ];
 
   return (
-    <Layout title={`${repo.owner}/${repo.name}`}>
-      {error && <ErrorMessage message={error} onDismiss={() => setError("")} />}
-
-      {/* Status banner */}
-      {repo.status !== "ready" && (
-        <div className={`status-banner status-${repo.status}`}>
-          {repo.status === "analyzing" && (
-            <><span className="spinner-sm" /> Analyzing repository... This may take a few minutes.</>
-          )}
+    <Layout
+      title={`${repo.owner}/${repo.name}`}
+      subtitle={repo.github_url}
+      breadcrumb={[{ to: "/dashboard", label: "Dashboard" }, { label: `${repo.owner}/${repo.name}` }]}
+      actions={
+        <div style={{ display: "flex", gap: 8 }}>
+          <a href={repo.github_url} target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-sm">
+            <ExternalLink size={13} /> GitHub
+          </a>
           {repo.status === "failed" && (
-            <>Analysis failed: {repo.error_message}
-              <button className="btn-sm btn-secondary ml-auto" onClick={async () => {
-                await apiFetch(`/analysis/${repoId}/trigger`, { method: "POST" }, token);
-                fetchData();
-              }}>
-                <RefreshCw size={13} /> Retry
-              </button>
-            </>
+            <button className="btn btn-primary btn-sm" onClick={triggerAnalysis}>
+              <RefreshCw size={13} /> Retry
+            </button>
           )}
-          {repo.status === "pending" && (
-            <>Analysis pending.
-              <button className="btn-sm btn-primary ml-auto" onClick={async () => {
-                await apiFetch(`/analysis/${repoId}/trigger`, { method: "POST" }, token);
-                fetchData();
-              }}>
-                Start Analysis
-              </button>
-            </>
-          )}
+        </div>
+      }
+    >
+      <ErrorBanner message={error} onDismiss={() => setError("")} />
+
+      {/* Status banners */}
+      {repo.status === "pending" && (
+        <div className="status-banner banner-amber">
+          <AlertTriangle size={16} />
+          Analysis not started.
+          <button className="btn btn-primary btn-sm" style={{ marginLeft: "auto" }} onClick={triggerAnalysis}>
+            Start Analysis
+          </button>
+        </div>
+      )}
+      {repo.status === "failed" && (
+        <div className="status-banner banner-red">
+          <AlertTriangle size={16} />
+          Analysis failed: {repo.error_message}
         </div>
       )}
 
       {/* Repository header */}
-      <div className="card repo-header-card">
-        <div className="repo-title-row">
-          <GitBranch size={24} className="text-accent" />
-          <div>
-            <h2>{repo.owner}/{repo.name}</h2>
-            <a href={repo.github_url} target="_blank" rel="noopener noreferrer" className="text-muted text-sm link-external">
+      <div className="card">
+        <div className="repo-overview-header">
+          <div className="repo-overview-icon">
+            <GitBranch size={24} />
+          </div>
+          <div className="repo-overview-info">
+            <div className="d-flex align-center gap-8 mb-4">
+              <div className="repo-overview-title">{repo.owner}/{repo.name}</div>
+              <StatusBadge status={repo.status} />
+            </div>
+            <a href={repo.github_url} target="_blank" rel="noopener noreferrer" className="repo-overview-url">
               {repo.github_url} <ExternalLink size={12} />
             </a>
           </div>
-          <StatusBadge status={repo.status} />
         </div>
+
         {analysis?.onboarding_plan && (
-          <p className="onboarding-plan-summary">{analysis.onboarding_plan.substring(0, 300)}{analysis.onboarding_plan.length > 300 ? "..." : ""}</p>
+          <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.7, marginTop: 4, borderTop: "1px solid var(--border)", paddingTop: 12 }}>
+            {analysis.onboarding_plan.substring(0, 400)}
+            {analysis.onboarding_plan.length > 400 && "..."}
+          </p>
         )}
       </div>
 
       {/* Tech stack */}
       {analysis && (
-        <div className="cards-grid-3">
-          <div className="card">
-            <h3 className="card-title"><Code size={16} /> Languages</h3>
-            <div className="tag-list">
-              {langs.map(([lang, count]) => (
-                <span key={lang} className="tag">{lang} <span className="tag-count">({count})</span></span>
-              ))}
-              {langs.length === 0 && <span className="text-muted">None detected</span>}
+        <>
+          <h3 className="section-heading"><Code size={13} /> Technology Stack</h3>
+          <div className="tech-grid">
+            <div className="card mb-0">
+              <div className="card-header">
+                <h3 className="card-title"><Code size={14} className="card-title-icon" /> Languages</h3>
+              </div>
+              <div className="tag-list">
+                {langs.map(([lang, count]) => (
+                  <span key={lang} className="tag">{lang} <span className="tag-count">({count})</span></span>
+                ))}
+                {langs.length === 0 && <span className="text-muted text-sm">None detected</span>}
+              </div>
+            </div>
+            <div className="card mb-0">
+              <div className="card-header">
+                <h3 className="card-title"><Box size={14} className="card-title-icon" /> Frameworks</h3>
+              </div>
+              <div className="tag-list">
+                {frameworks.map((f) => <span key={f} className="tag tag-blue">{f}</span>)}
+                {frameworks.length === 0 && <span className="text-muted text-sm">None detected</span>}
+              </div>
+            </div>
+            <div className="card mb-0">
+              <div className="card-header">
+                <h3 className="card-title"><Database size={14} className="card-title-icon" /> Infrastructure</h3>
+              </div>
+              <div className="tag-list">
+                {databases.map((d) => <span key={d} className="tag tag-purple">{d}</span>)}
+                {infra.map((i) => <span key={i} className="tag tag-gray">{i}</span>)}
+                {databases.length === 0 && infra.length === 0 && <span className="text-muted text-sm">None detected</span>}
+              </div>
             </div>
           </div>
-          <div className="card">
-            <h3 className="card-title"><Box size={16} /> Frameworks</h3>
-            <div className="tag-list">
-              {frameworks.map((f) => <span key={f} className="tag tag-blue">{f}</span>)}
-              {frameworks.length === 0 && <span className="text-muted">None detected</span>}
-            </div>
-          </div>
-          <div className="card">
-            <h3 className="card-title"><Database size={16} /> Databases</h3>
-            <div className="tag-list">
-              {databases.map((d) => <span key={d} className="tag tag-purple">{d}</span>)}
-              {infra.map((i) => <span key={i} className="tag tag-gray">{i}</span>)}
-              {databases.length === 0 && infra.length === 0 && <span className="text-muted">None detected</span>}
-            </div>
-          </div>
-        </div>
+        </>
       )}
 
       {/* Navigation cards */}
-      <h3 className="section-title">Onboarding Sections</h3>
+      <h3 className="section-heading"><Star size={13} /> Onboarding Sections</h3>
       <div className="nav-cards-grid">
         {navCards.map((card) => (
-          <Link key={card.to} to={card.to} className="nav-card">
+          <Link
+            key={card.to}
+            to={card.to}
+            className="nav-card"
+            aria-disabled={!card.available}
+            tabIndex={card.available ? undefined : -1}
+            onClick={(event) => { if (!card.available) event.preventDefault(); }}
+            style={!card.available ? { opacity: 0.5, cursor: "not-allowed" } : {}}
+          >
             <div className="nav-card-icon">{card.icon}</div>
             <div>
               <div className="nav-card-label">{card.label}</div>
@@ -147,14 +193,16 @@ export default function RepositoryOverviewPage() {
         ))}
       </div>
 
-      {/* Setup issues */}
+      {/* Configuration issues */}
       {analysis?.setup_issues?.length > 0 && (
-        <div className="card">
-          <h3 className="card-title text-amber">⚠ Configuration Findings</h3>
+        <div className="card card-amber">
+          <div className="card-header">
+            <h3 className="card-title"><AlertTriangle size={15} style={{ color: "var(--amber)" }} /> Configuration Findings</h3>
+          </div>
           <div className="issues-list">
             {analysis.setup_issues.map((issue, i) => (
-              <div key={i} className={`issue-item severity-${issue.severity}`}>
-                <span className="issue-type">{issue.type?.replace(/_/g, " ")}</span>
+              <div key={i} className={`issue-item severity-${issue.severity || "low"}`}>
+                <span className="issue-type">{(issue.type || "").replace(/_/g, " ")}</span>
                 <span>{issue.description}</span>
               </div>
             ))}

@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import "./styles.css";
 
 // Pages
+import LandingPage from "./pages/LandingPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import DashboardPage from "./pages/DashboardPage.jsx";
 import AddRepositoryPage from "./pages/AddRepositoryPage.jsx";
@@ -13,6 +14,11 @@ import SetupGuidePage from "./pages/SetupGuidePage.jsx";
 import StarterTasksPage from "./pages/StarterTasksPage.jsx";
 import CodebaseQAPage from "./pages/CodebaseQAPage.jsx";
 import OnboardingProgressPage from "./pages/OnboardingProgressPage.jsx";
+import ProfilePage from "./pages/ProfilePage.jsx";
+import AnalysisProgressPage from "./pages/AnalysisProgressPage.jsx";
+
+// Components
+import { ToastProvider } from "./components/Layout.jsx";
 
 // Auth context
 export const AuthContext = React.createContext(null);
@@ -21,11 +27,34 @@ export const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
 export async function apiFetch(path, options = {}, token = "") {
   const headers = new Headers(options.headers || {});
   if (token) headers.set("Authorization", `Bearer ${token}`);
-  if (options.body && !(options.body instanceof FormData))
+  if (options.body && !(options.body instanceof FormData)) {
     headers.set("Content-Type", "application/json");
-  const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+  }
+
+  let res;
+  try {
+    res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+  } catch {
+    throw new Error("Network error — check your connection.");
+  }
+
   const payload = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(payload.detail || payload.message || "Request failed");
+
+  if (res.status === 401) {
+    // Token expired — trigger logout via event
+    window.dispatchEvent(new Event("auth:expired"));
+    throw new Error(payload.detail || "Session expired. Please sign in again.");
+  }
+
+  if (!res.ok) {
+    // FastAPI detail can be a string or a list of validation errors
+    let detail = payload.detail || payload.message;
+    if (Array.isArray(detail)) {
+      detail = detail.map((e) => e.msg || JSON.stringify(e)).join("; ");
+    }
+    throw new Error(detail || `Request failed (${res.status})`);
+  }
+
   return payload;
 }
 
@@ -34,56 +63,81 @@ function AuthProvider({ children }) {
     () => localStorage.getItem("devonboard_token") || ""
   );
   const [user, setUser] = React.useState(null);
+  const [authLoading, setAuthLoading] = React.useState(true);
 
-  const login = (accessToken) => {
+  const login = (accessToken, userData = null) => {
     localStorage.setItem("devonboard_token", accessToken);
     setToken(accessToken);
+    if (userData) setUser(userData);
   };
 
   const logout = () => {
     localStorage.removeItem("devonboard_token");
-    localStorage.removeItem("devonboard_repo");
     setToken("");
     setUser(null);
   };
 
   React.useEffect(() => {
-    if (!token) return;
+    function handleExpired() { logout(); }
+    window.addEventListener("auth:expired", handleExpired);
+    return () => window.removeEventListener("auth:expired", handleExpired);
+  }, []);
+
+  React.useEffect(() => {
+    if (!token) {
+      setAuthLoading(false);
+      return;
+    }
     apiFetch("/auth/me", {}, token)
-      .then(setUser)
-      .catch(() => logout());
+      .then((u) => { setUser(u); setAuthLoading(false); })
+      .catch(() => { logout(); setAuthLoading(false); });
   }, [token]);
 
   return (
-    <AuthContext.Provider value={{ token, user, login, logout }}>
+    <AuthContext.Provider value={{ token, user, login, logout, authLoading }}>
       {children}
     </AuthContext.Provider>
   );
 }
 
 function ProtectedRoute({ children }) {
-  const { token } = React.useContext(AuthContext);
+  const { token, authLoading } = React.useContext(AuthContext);
+  if (authLoading) return null;
   if (!token) return <Navigate to="/login" replace />;
+  return children;
+}
+
+function PublicRoute({ children }) {
+  const { token, authLoading } = React.useContext(AuthContext);
+  if (authLoading) return null;
+  if (token) return <Navigate to="/dashboard" replace />;
   return children;
 }
 
 function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-          <Route path="/add-repository" element={<ProtectedRoute><AddRepositoryPage /></ProtectedRoute>} />
-          <Route path="/repository/:repoId" element={<ProtectedRoute><RepositoryOverviewPage /></ProtectedRoute>} />
-          <Route path="/repository/:repoId/architecture" element={<ProtectedRoute><ArchitecturePage /></ProtectedRoute>} />
-          <Route path="/repository/:repoId/setup" element={<ProtectedRoute><SetupGuidePage /></ProtectedRoute>} />
-          <Route path="/repository/:repoId/tasks" element={<ProtectedRoute><StarterTasksPage /></ProtectedRoute>} />
-          <Route path="/repository/:repoId/qa" element={<ProtectedRoute><CodebaseQAPage /></ProtectedRoute>} />
-          <Route path="/repository/:repoId/progress" element={<ProtectedRoute><OnboardingProgressPage /></ProtectedRoute>} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </BrowserRouter>
+      <ToastProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Public landing page */}
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
+            {/* Protected app */}
+            <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+            <Route path="/add-repository" element={<ProtectedRoute><AddRepositoryPage /></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+            <Route path="/repository/:repoId" element={<ProtectedRoute><RepositoryOverviewPage /></ProtectedRoute>} />
+            <Route path="/repository/:repoId/analyzing" element={<ProtectedRoute><AnalysisProgressPage /></ProtectedRoute>} />
+            <Route path="/repository/:repoId/architecture" element={<ProtectedRoute><ArchitecturePage /></ProtectedRoute>} />
+            <Route path="/repository/:repoId/setup" element={<ProtectedRoute><SetupGuidePage /></ProtectedRoute>} />
+            <Route path="/repository/:repoId/tasks" element={<ProtectedRoute><StarterTasksPage /></ProtectedRoute>} />
+            <Route path="/repository/:repoId/qa" element={<ProtectedRoute><CodebaseQAPage /></ProtectedRoute>} />
+            <Route path="/repository/:repoId/progress" element={<ProtectedRoute><OnboardingProgressPage /></ProtectedRoute>} />
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </ToastProvider>
     </AuthProvider>
   );
 }

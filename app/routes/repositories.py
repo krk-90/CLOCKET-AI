@@ -72,7 +72,8 @@ def add_repository(
         .maybe_single()
         .execute()
     )
-    if existing.data:
+    if existing is not None and getattr(existing, "data", None):
+
         return existing.data
 
     result = (

@@ -23,6 +23,12 @@ class LoginRequest(BaseModel):
 
 @router.post("/signup")
 def signup(request: SignupRequest):
+    import os
+    if not os.getenv("SUPABASE_URL") or not os.getenv("SUPABASE_KEY"):
+        raise HTTPException(
+            status_code=500,
+            detail="Server misconfigured: SUPABASE_URL or SUPABASE_KEY is missing. Set them in your .env file.",
+        )
     try:
         supabase = get_supabase_client()
 
@@ -38,6 +44,8 @@ def signup(request: SignupRequest):
             "user": response.user.model_dump() if response.user else None,
         }
 
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=400,
@@ -47,6 +55,13 @@ def signup(request: SignupRequest):
 
 @router.post("/login")
 def login(request: LoginRequest):
+    # Check env vars before attempting auth
+    import os
+    if not os.getenv("SUPABASE_URL") or not os.getenv("SUPABASE_KEY"):
+        raise HTTPException(
+            status_code=500,
+            detail="Server misconfigured: SUPABASE_URL or SUPABASE_KEY is missing. Set them in your .env file.",
+        )
     try:
         supabase = get_supabase_client()
 
@@ -57,17 +72,25 @@ def login(request: LoginRequest):
             }
         )
 
+        if not response.session:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid email or password",
+            )
+
         return {
             "access_token": response.session.access_token,
             "refresh_token": response.session.refresh_token,
             "user": response.user.model_dump()
         }
 
-    except Exception:
+    except HTTPException:
+        raise
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password"
-        )
+            detail="Invalid email or password",
+        ) from exc
 
 
 @router.get("/me")
