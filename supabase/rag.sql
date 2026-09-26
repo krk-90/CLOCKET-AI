@@ -30,7 +30,7 @@ create index if not exists rag_documents_repo_id_idx
 
 create index if not exists rag_documents_embedding_idx
   on public.rag_documents
-  using ivfflat (embedding vector_cosine_ops) with (lists = 100);
+  using hnsw (embedding vector_cosine_ops);
 
 alter table public.rag_documents enable row level security;
 
@@ -100,7 +100,7 @@ returns table(
 )
 language sql
 stable
-set search_path = public
+set search_path = public, extensions
 as $$
   select
     d.id,
@@ -129,7 +129,7 @@ create or replace function public.match_documents(
 returns table(id text, source text, content text, similarity double precision)
 language sql
 stable
-set search_path = public
+set search_path = public, extensions
 as $$
   select
     d.id,
