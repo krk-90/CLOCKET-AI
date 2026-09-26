@@ -1,3 +1,4 @@
+# ── Stage 1: build the React frontend ────────────────────────────────────────
 FROM node:22-alpine AS frontend-build
 
 WORKDIR /build/app/frontend
@@ -6,6 +7,7 @@ RUN npm ci
 COPY app/frontend/ ./
 RUN npm run build
 
+# ── Stage 2: production image ─────────────────────────────────────────────────
 FROM python:3.11-slim
 
 ARG RAG_EMBEDDING_MODEL=BAAI/bge-small-en-v1.5
@@ -26,31 +28,47 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
+# Install system dependencies
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
         supervisor \
         git \
     && rm -rf /var/lib/apt/lists/*
 
+# Upgrade pip then install Python dependencies
 COPY requirements.txt ./
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir -r requirements.txt
 
-RUN pip install --no-cache-dir -r requirements.txt
+# Sanity-check: git and mcp-server-git must be on PATH
+RUN git --version \
+    && (which mcp-server-git || echo "mcp-server-git not on PATH — check requirements.txt")
 
-RUN which git && git --version
+# Pre-download embedding models into the cache directory
+RUN mkdir -p /opt/fastembed_cache \
+    && python -c "
+import os
+from fastembed import TextEmbedding
+models = {os.environ['RAG_EMBEDDING_MODEL'], os.environ['MEM0_EMBEDDING_MODEL']}
+for m in models:
+    TextEmbedding(model_name=m)
+"
 
-RUN which mcp-server-git || true
-
-RUN python -c "import os; from fastembed import TextEmbedding; [TextEmbedding(model_name=m) for m in {os.environ['RAG_EMBEDDING_MODEL'], os.environ['MEM0_EMBEDDING_MODEL']}]"
-
-COPY app ./app
-COPY agent ./agent
+# Copy application source
+COPY app        ./app
+COPY agent      ./agent
 COPY llm_gateway ./llm_gateway
-COPY mcp_server ./mcp_server
-COPY supabase ./supabase
-COPY --from=frontend-build /build/app/frontend/dist ./app/frontend/dist
-COPY docker/supervisord.conf /etc/supervisor/conf.d/personal-assistant.conf
-COPY docker/entrypoint.sh /entrypoint.sh
+COPY mcp_server  ./mcp_server
+COPY supabase   ./supabase
 
+# Copy built frontend assets from Stage 1
+COPY --from=frontend-build /build/app/frontend/dist ./app/frontend/dist
+
+# Copy runtime configuration files
+COPY docker/supervisord.conf /etc/supervisor/conf.d/personal-assistant.conf
+COPY docker/entrypoint.sh    /entrypoint.sh
+
+# Create non-root user, required runtime directories, and fix ownership
 RUN chmod +x /entrypoint.sh \
     && useradd --create-home --uid 10001 appuser \
     && mkdir -p /app/data/uploads \
