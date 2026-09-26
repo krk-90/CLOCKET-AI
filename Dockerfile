@@ -46,13 +46,7 @@ RUN git --version \
 
 # Pre-download embedding models into the cache directory
 RUN mkdir -p /opt/fastembed_cache \
-    && python -c "
-import os
-from fastembed import TextEmbedding
-models = {os.environ['RAG_EMBEDDING_MODEL'], os.environ['MEM0_EMBEDDING_MODEL']}
-for m in models:
-    TextEmbedding(model_name=m)
-"
+    && python -c "from fastembed import TextEmbedding; [TextEmbedding(model_name=m) for m in {'${RAG_EMBEDDING_MODEL}', '${MEM0_EMBEDDING_MODEL}'}]"
 
 # Copy application source
 COPY app        ./app
