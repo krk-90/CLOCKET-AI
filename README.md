@@ -3,7 +3,26 @@
 **Smart Developer Onboarding Assistant** — An AI-powered tool that analyzes any public GitHub repository and automatically generates a complete developer onboarding experience.
 
 > Built for the IBM Bob 2.0 Hackathon  
-> Deployed: https://devonboard-ai.onrender.com *(update after deployment)*
+> Deployed: https://clocket-ai.onrender.com
+
+---
+
+## Table of Contents
+
+1. [Problem](#1-problem)
+2. [Solution](#2-solution)
+3. [Key Features](#3-key-features)
+4. [Architecture](#4-architecture)
+5. [AI / ML Components](#5-ai--ml-components)
+6. [MCP Usage](#6-mcp-usage)
+7. [RAG Architecture](#7-rag-architecture)
+8. [LangGraph Workflow](#8-langgraph-workflow)
+9. [Security](#9-security)
+10. [Database Schema](#10-database-schema)
+11. [**Setup Guide**](#11-setup-guide)
+12. [Demo Instructions](#12-demo-instructions)
+13. [Future Improvements](#13-future-improvements)
+14. [Tech Stack](#tech-stack)
 
 ---
 
@@ -11,12 +30,12 @@
 
 When a developer joins an unfamiliar software project, they spend **hours or days** trying to understand:
 
-- Project structure and architecture  
-- Technology stack and dependencies  
-- How to set up the environment  
-- Where the entry points and APIs are  
-- What the database looks like  
-- Where to start contributing  
+- Project structure and architecture
+- Technology stack and dependencies
+- How to set up the environment
+- Where the entry points and APIs are
+- What the database looks like
+- Where to start contributing
 - What tasks are beginner-friendly
 
 There is no automated, intelligent way to get this information quickly. README files are often outdated, incomplete, or missing entirely.
@@ -103,6 +122,7 @@ Storage
 ## 6. MCP Usage
 
 ### Official GitHub MCP Server
+
 Used via `MultiServerMCPClient` (same pattern as existing `mcp-server-git`).
 
 ```python
@@ -121,6 +141,7 @@ tools = await client.get_tools()
 Read-only tools: `get_repository`, `get_file_contents`, `get_tree`, `search_code`, `list_commits`, `list_branches`, `list_pull_requests`, `list_issues`.
 
 ### DevOnboard Custom MCP Tools
+
 `mcp_server/devonboard_tools.py` — DevOnboard-specific persistence tools:
 
 | Tool | Description |
@@ -131,6 +152,7 @@ Read-only tools: `get_repository`, `get_file_contents`, `get_tree`, `search_code
 | `update_onboarding_task` | Update task status |
 
 ### Existing Task MCP (unchanged)
+
 `mcp_server/tools.py` — Task CRUD tools (add/get/update/complete/delete). Used for onboarding task progress tracking.
 
 ---
@@ -213,58 +235,251 @@ All tables have Row Level Security enabled with owner-scoped policies.
 
 ---
 
-## 11. Deployment
+## 11. Setup Guide
 
 ### Prerequisites
-- Python 3.11+
-- Node.js 22+
-- Git
-- Supabase project
-- Groq API key
-- GitHub personal access token (repo read scope)
 
-### Local Development
+Make sure the following are installed and available on your `PATH` before starting:
+
+| Tool | Version | Purpose |
+|------|---------|---------|
+| Python | 3.11+ | Backend runtime |
+| Node.js | 22+ | Frontend build |
+| Git | any | Repository cloning |
+| Docker | any | GitHub MCP Server container |
+
+You also need accounts / API keys for:
+
+- **Supabase** — free tier is sufficient ([supabase.com](https://supabase.com))
+- **Groq** — free tier is sufficient ([console.groq.com](https://console.groq.com))
+- **GitHub** — personal access token with `repo` read scope ([docs](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens))
+- **LangSmith** *(optional)* — for LLM tracing ([smith.langchain.com](https://smith.langchain.com))
+
+---
+
+### Step 1 — Clone the repository
 
 ```bash
 git clone https://github.com/krk-90/CLOCKET-AI.git
 cd CLOCKET-AI
-
-python -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-
-cp .env.example .env
-# Fill in: SUPABASE_URL, SUPABASE_KEY, SUPABASE_SERVICE_ROLE_KEY,
-#          GROQ_API_KEY, GITHUB_TOKEN
-
-# Set up database (run each file in Supabase SQL Editor)
-# supabase/tasks.sql, supabase/chat.sql, supabase/rag.sql,
-# supabase/repositories.sql, supabase/analysis.sql, supabase/onboarding.sql
-
-uvicorn app.main:fastapi_app --reload --reload-dir app
 ```
 
-### Frontend Development
+---
+
+### Step 2 — Create and activate a Python virtual environment
+
+```bash
+# Create the virtual environment
+python -m venv .venv
+
+# Activate it
+# macOS / Linux:
+source .venv/bin/activate
+
+# Windows (PowerShell):
+.venv\Scripts\Activate.ps1
+
+# Windows (cmd):
+.venv\Scripts\activate.bat
+```
+
+---
+
+### Step 3 — Install Python dependencies
+
+```bash
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+> **Note:** This installs all backend dependencies including FastAPI, LangChain, LangGraph, fastembed, Supabase client, and the Git MCP server.
+
+---
+
+### Step 4 — Configure environment variables
+
+Copy the example file and fill in your values:
+
+```bash
+cp .env.example .env
+```
+
+Open `.env` and set the required variables:
+
+```env
+# ── Required ──────────────────────────────────────────────────────────────────
+
+# Supabase — find these in your project's Settings > API
+SUPABASE_URL=https://<your-project-id>.supabase.co
+SUPABASE_KEY=<anon-public-key>
+SUPABASE_SERVICE_ROLE_KEY=<service-role-key>
+SUPABASE_DB_URL=postgresql://postgres:<password>@db.<project-id>.supabase.co:5432/postgres
+
+# Groq — find this at console.groq.com/keys
+GROQ_API_KEY=gsk_...
+
+# GitHub — Personal Access Token with `repo` (read) scope
+GITHUB_TOKEN=ghp_...
+
+# ── Optional ──────────────────────────────────────────────────────────────────
+
+# LangSmith tracing (set LANGSMITH_TRACING=false to disable entirely)
+LANGSMITH_TRACING=false
+LANGSMITH_API_KEY=
+LANGSMITH_PROJECT=devonboard-ai
+
+# CORS — only needed when running the frontend separately from FastAPI
+# (not required when using the built dist/ served by FastAPI)
+CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
+```
+
+> **Never commit your `.env` file.** It is already listed in `.gitignore`.
+
+---
+
+### Step 5 — Set up the Supabase database
+
+Run the SQL migration files **in order** using the Supabase SQL Editor  
+(*Dashboard → SQL Editor → New query → paste → Run*):
+
+| Order | File | Description |
+|-------|------|-------------|
+| 1 | `supabase/tasks.sql` | General task manager tables |
+| 2 | `supabase/chat.sql` | Conversations and messages |
+| 3 | `supabase/rag.sql` | RAG documents with `repository_id` column |
+| 4 | `supabase/repositories.sql` | Tracked repositories |
+| 5 | `supabase/analysis.sql` | Analysis results storage |
+| 6 | `supabase/onboarding.sql` | Onboarding tasks and progress |
+
+All tables are created with Row Level Security enabled and owner-scoped policies.
+
+> **Tip:** If you are re-running migrations on an existing project, the files use `CREATE TABLE IF NOT EXISTS` and `CREATE OR REPLACE FUNCTION` so they are safe to re-run.
+
+---
+
+### Step 6 — Build the frontend
 
 ```bash
 cd app/frontend
 npm install
-npm run dev      # http://localhost:5173
-npm run build    # produces dist/ served by FastAPI
+npm run build   # outputs to app/frontend/dist/
+cd ../..
 ```
 
-### Docker
+> The built `dist/` directory is served automatically by FastAPI at `/` and all SPA routes (e.g. `/login`, `/dashboard`).
+
+---
+
+### Step 7 — Start the backend
+
+From the project root (with `.venv` active):
 
 ```bash
+uvicorn app.main:fastapi_app --reload --reload-dir app
+```
+
+The API is now available at **http://localhost:8000**.  
+The React frontend is served at **http://localhost:8000** (root and all SPA routes).  
+Interactive API docs are at **http://localhost:8000/docs**.
+
+---
+
+### Frontend hot-reload development (optional)
+
+If you want live reload while editing the frontend, run Vite's dev server alongside the backend. Vite proxies all API calls to FastAPI automatically:
+
+```bash
+# Terminal 1 — backend
+uvicorn app.main:fastapi_app --reload --reload-dir app
+
+# Terminal 2 — frontend dev server
+cd app/frontend
+npm run dev    # http://localhost:5173
+```
+
+The Vite dev server at `http://localhost:5173` proxies `/auth`, `/repositories`, `/analysis`, `/chat`, and `/health` to `http://localhost:8000` (configured in `vite.config.js`).
+
+---
+
+### Docker (self-contained build)
+
+The Dockerfile builds the React frontend in stage 1 and packages it with the Python backend in stage 2. No separate frontend build step is needed.
+
+```bash
+# Build the image
 docker build -t devonboard-ai .
+
+# Run with your .env file
 docker run --rm -p 8000:8000 --env-file .env devonboard-ai
 ```
 
-### Render Deployment
+The app is available at **http://localhost:8000**.
 
-1. Create a **Blueprint** from this repository (picks up `render.yaml`)
-2. Set secrets in Render dashboard: `SUPABASE_URL`, `SUPABASE_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_DB_URL`, `GROQ_API_KEY`, `GITHUB_TOKEN`, `LANGSMITH_API_KEY`
-3. Set `CORS_ALLOWED_ORIGINS` to your service URL
+> **Note:** The Docker build pre-downloads the fastembed embedding model (`BAAI/bge-small-en-v1.5`) during the image build. The first build takes a few extra minutes for this download; subsequent builds use the Docker layer cache.
+
+---
+
+### Render deployment
+
+1. **Fork or push** this repository to GitHub.
+2. In the Render dashboard, click **New → Blueprint** and point it at your repository — Render will detect `render.yaml` automatically.
+3. Set the following **environment variables / secrets** in the Render dashboard:
+
+   | Variable | Where to find it |
+   |----------|-----------------|
+   | `SUPABASE_URL` | Supabase Dashboard → Settings → API |
+   | `SUPABASE_KEY` | Supabase Dashboard → Settings → API (anon key) |
+   | `SUPABASE_SERVICE_ROLE_KEY` | Supabase Dashboard → Settings → API |
+   | `SUPABASE_DB_URL` | Supabase Dashboard → Settings → Database → Connection string |
+   | `GROQ_API_KEY` | [console.groq.com/keys](https://console.groq.com/keys) |
+   | `GITHUB_TOKEN` | GitHub → Settings → Developer settings → Personal access tokens |
+   | `LANGSMITH_API_KEY` | [smith.langchain.com](https://smith.langchain.com) *(optional)* |
+   | `CORS_ALLOWED_ORIGINS` | Your Render service URL, e.g. `https://clocket-ai.onrender.com` |
+
+4. **Deploy.** Render will build the Docker image, run the container, and expose the service on your `.onrender.com` URL.
+
+> The `render.yaml` provisions a 1 GB persistent disk at `/app/data` for the Mem0 history database and temporary analysis clones.
+
+---
+
+### Environment variable reference
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `SUPABASE_URL` | ✅ | — | Supabase project URL |
+| `SUPABASE_KEY` | ✅ | — | Supabase anon/public key |
+| `SUPABASE_SERVICE_ROLE_KEY` | ✅ | — | Supabase service role key (bypasses RLS for server-side ops) |
+| `SUPABASE_DB_URL` | ✅ | — | Direct PostgreSQL connection string |
+| `GROQ_API_KEY` | ✅ | — | Groq API key for LLM inference |
+| `GITHUB_TOKEN` | ✅ | — | GitHub PAT with `repo` read scope |
+| `GITHUB_MCP_ALLOW_WRITE` | ❌ | `false` | Set `true` to enable GitHub write tools |
+| `DEVONBOARD_LLM_MODEL` | ❌ | `openai/gpt-oss-20b` | Groq model used for analysis |
+| `ANALYSIS_MAX_FILE_SIZE_KB` | ❌ | `500` | Max file size indexed per repo (KB) |
+| `ANALYSIS_MAX_FILES` | ❌ | `200` | Max files indexed per repository |
+| `CORS_ALLOWED_ORIGINS` | ❌ | `http://localhost:5173` | Comma-separated allowed origins |
+| `RAG_EMBEDDING_MODEL` | ❌ | `BAAI/bge-small-en-v1.5` | fastembed model for RAG embeddings |
+| `RAG_INDEX_REPO` | ❌ | `false` | Index general chat files into RAG |
+| `LANGSMITH_TRACING` | ❌ | `false` | Enable LangSmith tracing |
+| `LANGSMITH_API_KEY` | ❌ | — | LangSmith API key |
+| `LANGSMITH_PROJECT` | ❌ | `devonboard-ai` | LangSmith project name |
+| `MEM0_ENABLED` | ❌ | `false` | Enable Mem0 long-term memory for chat |
+| `MEM0_HISTORY_DB_PATH` | ❌ | `/app/data/mem0-history.db` | Path to Mem0 SQLite history file |
+
+---
+
+### Verifying the setup
+
+Once the server is running, confirm everything is healthy:
+
+```bash
+# Health check endpoint
+curl http://localhost:8000/health
+
+# Expected response:
+# {"status": "ok", ...}
+```
+
+Visit **http://localhost:8000/docs** for the full interactive API reference.
 
 ---
 
@@ -272,7 +487,7 @@ docker run --rm -p 8000:8000 --env-file .env devonboard-ai
 
 1. **Sign up** at the deployed URL
 2. **Add a repository** — enter any public GitHub URL, e.g. `https://github.com/tiangolo/fastapi`
-3. **Analysis starts automatically** — takes 2-5 minutes depending on repo size
+3. **Analysis starts automatically** — takes 2–5 minutes depending on repo size
 4. **Explore the overview** — technology stack, architecture summary, configuration findings
 5. **View Architecture** — visual layer breakdown with API endpoints
 6. **View Setup Guide** — step-by-step instructions with copy-to-clipboard commands
@@ -315,7 +530,7 @@ docker run --rm -p 8000:8000 --env-file .env devonboard-ai
 | Embeddings | fastembed BAAI/bge-small-en-v1.5 (384 dims) |
 | Vector Store | Supabase pgvector |
 | Auth | Supabase email/password + Bearer token + RLS |
-| Frontend | React + Vite + React Router |
+| Frontend | React 18 + Vite + React Router v6 |
 | Tracing | LangSmith |
 | Deployment | Docker + Supervisor + Render |
 

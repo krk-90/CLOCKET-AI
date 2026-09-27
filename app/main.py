@@ -124,3 +124,15 @@ fastapi_app.include_router(rag_router)
 fastapi_app.include_router(chat_router)
 fastapi_app.include_router(repositories_router)
 fastapi_app.include_router(analysis_router)
+
+
+@fastapi_app.get("/{full_path:path}", include_in_schema=False)
+def spa_fallback(full_path: str):
+    """Catch-all route: serve the React SPA index.html for any unmatched path."""
+    if INDEX_FILE.exists():
+        return FileResponse(INDEX_FILE)
+    return {
+        "service": "personal-assistant",
+        "message": "Build the React frontend with `npm run build` in app/frontend.",
+        "docs": "/docs",
+    }
