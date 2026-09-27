@@ -1,4 +1,4 @@
-"""Starter task generator for DevOnboard AI.
+"""Starter task generator for Clocket AI.
 
 Generates beginner/intermediate/advanced tasks grounded in the ACTUAL
 files and functions found in the repository.

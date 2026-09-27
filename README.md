@@ -1,4 +1,4 @@
-# DevOnboard AI
+# Clocket AI
 
 **Smart Developer Onboarding Assistant** — An AI-powered tool that analyzes any public GitHub repository and automatically generates a complete developer onboarding experience.
 
@@ -44,7 +44,7 @@ There is no automated, intelligent way to get this information quickly. README f
 
 ## 2. Solution
 
-**DevOnboard AI** analyzes a GitHub repository in minutes and produces:
+**Clocket AI** analyzes a GitHub repository in minutes and produces:
 
 | Output | Description |
 |--------|-------------|
@@ -93,7 +93,7 @@ LangGraph
 Tools
   ├── GitHub MCP Server (official) — read-only repo access
   ├── Task MCP Server — onboarding task progress
-  └── DevOnboard MCP — save_analysis, get_progress, update_task
+  └── Clocket AI MCP — save_analysis, get_progress, update_task
 
 Storage
   └── Supabase PostgreSQL + pgvector
@@ -140,9 +140,9 @@ tools = await client.get_tools()
 
 Read-only tools: `get_repository`, `get_file_contents`, `get_tree`, `search_code`, `list_commits`, `list_branches`, `list_pull_requests`, `list_issues`.
 
-### DevOnboard Custom MCP Tools
+### Clocket AI Custom MCP Tools
 
-`mcp_server/devonboard_tools.py` — DevOnboard-specific persistence tools:
+`mcp_server/clocket_ai_tools.py` — Clocket AI-specific persistence tools:
 
 | Tool | Description |
 |------|-------------|
@@ -162,7 +162,7 @@ Read-only tools: `get_repository`, `get_file_contents`, `get_tree`, `search_code
 ```
 Repository files (cloned locally)
   ↓
-agent/rag/devonboard_indexer.py
+agent/rag/clocket_ai_indexer.py
   ├── Walk file tree (skip node_modules, __pycache__, etc.)
   ├── Filter by supported extensions (30+ languages)
   ├── Detect language + chunk_type (code/doc/config)
@@ -171,7 +171,7 @@ agent/rag/devonboard_indexer.py
   └── Upsert into Supabase rag_documents
         with: user_id, repository_id, file_path, language, chunk_type, commit_sha
 
-Query time (agent/rag/devonboard_qa.py):
+Query time (agent/rag/clocket_ai_qa.py):
   ├── Embed question
   ├── Call match_rag_documents(query, user_id, count, repository_id)
   │     ← filtered by BOTH user_id AND repository_id
@@ -326,7 +326,7 @@ GITHUB_TOKEN=ghp_...
 # LangSmith tracing (set LANGSMITH_TRACING=false to disable entirely)
 LANGSMITH_TRACING=false
 LANGSMITH_API_KEY=
-LANGSMITH_PROJECT=devonboard-ai
+LANGSMITH_PROJECT=clocket-ai
 
 # CORS — only needed when running the frontend separately from FastAPI
 # (not required when using the built dist/ served by FastAPI)
@@ -407,10 +407,10 @@ The Dockerfile builds the React frontend in stage 1 and packages it with the Pyt
 
 ```bash
 # Build the image
-docker build -t devonboard-ai .
+docker build -t clocket-ai .
 
 # Run with your .env file
-docker run --rm -p 8000:8000 --env-file .env devonboard-ai
+docker run --rm -p 8000:8000 --env-file .env clocket-ai
 ```
 
 The app is available at **http://localhost:8000**.
@@ -453,7 +453,7 @@ The app is available at **http://localhost:8000**.
 | `GROQ_API_KEY` | ✅ | — | Groq API key for LLM inference |
 | `GITHUB_TOKEN` | ✅ | — | GitHub PAT with `repo` read scope |
 | `GITHUB_MCP_ALLOW_WRITE` | ❌ | `false` | Set `true` to enable GitHub write tools |
-| `DEVONBOARD_LLM_MODEL` | ❌ | `openai/gpt-oss-20b` | Groq model used for analysis |
+| `CLOCKET_AI_LLM_MODEL` | ❌ | `openai/gpt-oss-20b` | Groq model used for analysis |
 | `ANALYSIS_MAX_FILE_SIZE_KB` | ❌ | `500` | Max file size indexed per repo (KB) |
 | `ANALYSIS_MAX_FILES` | ❌ | `200` | Max files indexed per repository |
 | `CORS_ALLOWED_ORIGINS` | ❌ | `http://localhost:5173` | Comma-separated allowed origins |
@@ -461,7 +461,7 @@ The app is available at **http://localhost:8000**.
 | `RAG_INDEX_REPO` | ❌ | `false` | Index general chat files into RAG |
 | `LANGSMITH_TRACING` | ❌ | `false` | Enable LangSmith tracing |
 | `LANGSMITH_API_KEY` | ❌ | — | LangSmith API key |
-| `LANGSMITH_PROJECT` | ❌ | `devonboard-ai` | LangSmith project name |
+| `LANGSMITH_PROJECT` | ❌ | `clocket-ai` | LangSmith project name |
 | `MEM0_ENABLED` | ❌ | `false` | Enable Mem0 long-term memory for chat |
 | `MEM0_HISTORY_DB_PATH` | ❌ | `/app/data/mem0-history.db` | Path to Mem0 SQLite history file |
 
@@ -526,7 +526,7 @@ Visit **http://localhost:8000/docs** for the full interactive API reference.
 | API | FastAPI + Uvicorn + Pydantic + SlowAPI |
 | Agents | LangChain + LangGraph |
 | LLM | Groq (ChatGroq) with model fallback |
-| MCP | GitHub MCP Server + Task MCP + DevOnboard MCP |
+| MCP | GitHub MCP Server + Task MCP + Clocket AI MCP |
 | Embeddings | fastembed BAAI/bge-small-en-v1.5 (384 dims) |
 | Vector Store | Supabase pgvector |
 | Auth | Supabase email/password + Bearer token + RLS |

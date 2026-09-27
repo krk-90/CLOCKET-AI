@@ -1,4 +1,4 @@
-"""LLM-assisted architecture analyzer for DevOnboard AI."""
+"""LLM-assisted architecture analyzer for Clocket AI."""
 from __future__ import annotations
 
 import json

@@ -1,4 +1,4 @@
-"""Repository-scoped Q&A pipeline for DevOnboard AI.
+"""Repository-scoped Q&A pipeline for Clocket AI.
 
 Wraps the existing RAG infrastructure with:
 - repository_id filtering (prevents cross-repo data leakage)
@@ -105,7 +105,7 @@ def _retrieve_chunks(
     return response.data or []
 
 
-@traceable(name="devonboard.qa.ask")
+@traceable(name="clocket.ai.ask")
 async def ask_codebase_question(
     question: str,
     user_id: str,
@@ -152,13 +152,13 @@ async def ask_codebase_question(
             })
 
     # Generate answer using LLM
-    llm = get_model(os.getenv("DEVONBOARD_LLM_MODEL", "openai/gpt-oss-20b"))
+    llm = get_model(os.getenv("CLOCKET_AI_LLM_MODEL", "openai/gpt-oss-20b"))
     chain = CODEBASE_QA_PROMPT | llm
 
     response = await chain.ainvoke(
         {"question": question, "context": context},
         config=trace_config(
-            "devonboard.qa.llm",
+            "clocket.ai.llm",
             user_id=user_id,
             tags=["qa", "rag"],
             metadata={"repository_id": repository_id},

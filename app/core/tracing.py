@@ -21,9 +21,9 @@ def trace_config(
     metadata: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Build consistent LangChain run metadata without including secrets or prompts."""
-    run_tags = ["devonboard-ai", *(tags or [])]
+    run_tags = ["clocket-ai", *(tags or [])]
     run_metadata: dict[str, Any] = {
-        "service": "devonboard-ai",
+        "service": "clocket-ai",
         "tracing_enabled": tracing_enabled(),
     }
     if user_id:

@@ -1,4 +1,4 @@
-"""DevOnboard AI — LangGraph Onboarding Workflow.
+"""Clocket AI — LangGraph Onboarding Workflow.
 
 Pipeline:
   START
@@ -17,7 +17,7 @@ Uses:
 - Static scanner (agent/analysis/scanner.py) — deterministic
 - LLM for architecture, setup guide, onboarding plan, tasks
 - Existing SupabaseRetriever (extended with repository_id)
-- DevOnboard MCP tools for persistence
+- Clocket AI MCP tools for persistence
 """
 from __future__ import annotations
 
@@ -214,7 +214,7 @@ async def index_into_rag(state: OnboardingState) -> dict:
 
     try:
         import asyncio
-        from agent.rag.devonboard_indexer import index_repository_files
+        from agent.rag.clocket_ai_indexer import index_repository_files
         repository_id = state.get("repository_id", "")
         user_id = state.get("user_id", "")
         commit_sha = state.get("commit_sha", "")
@@ -247,7 +247,7 @@ async def persist_results(state: OnboardingState) -> dict:
     if state.get("error"):
         # Mark repository as failed
         try:
-            from mcp_server.devonboard_tools import _get_client
+            from mcp_server.clocket_ai_tools import _get_client
             client = _get_client()
             client.table("repositories").update(
                 {"status": "failed", "error_message": state.get("error", "Unknown error")[:500]}
@@ -257,7 +257,7 @@ async def persist_results(state: OnboardingState) -> dict:
         return {"persisted": False}
 
     try:
-        from mcp_server.devonboard_tools import save_repository_analysis, save_onboarding_tasks, _get_client
+        from mcp_server.clocket_ai_tools import save_repository_analysis, save_onboarding_tasks, _get_client
 
         scan_result = state.get("scan_result", {})
         architecture = state.get("architecture", {})
@@ -328,7 +328,7 @@ async def cleanup_local_repo(state: OnboardingState) -> dict:
 # ---------------------------------------------------------------------------
 
 def _get_llm():
-    model_name = os.getenv("DEVONBOARD_LLM_MODEL", "openai/gpt-oss-20b")
+    model_name = os.getenv("CLOCKET_AI_LLM_MODEL", "openai/gpt-oss-20b")
     return get_model(model_name)
 
 

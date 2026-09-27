@@ -29,7 +29,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-fastapi_app = FastAPI(title="DevOnboard AI", lifespan=lifespan)
+fastapi_app = FastAPI(title="Clocket AI", lifespan=lifespan)
 FRONTEND_DIR = Path(__file__).resolve().parent / "frontend"
 FRONTEND_DIST_DIR = FRONTEND_DIR / "dist"
 INDEX_FILE = FRONTEND_DIST_DIR / "index.html"

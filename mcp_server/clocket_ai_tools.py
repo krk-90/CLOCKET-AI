@@ -1,6 +1,6 @@
-"""DevOnboard AI custom MCP tools.
+"""Clocket AI custom MCP tools.
 
-These tools provide DevOnboard-specific persistence operations:
+These tools provide Clocket AI-specific persistence operations:
   - save_repository_analysis   : persist analysis JSON to Supabase
   - get_onboarding_progress    : read task completion state
   - update_onboarding_task     : mark task status
@@ -23,9 +23,9 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 mcp = FastMCP(
-    "devonboard",
-    host=os.getenv("DEVONBOARD_MCP_HOST", "127.0.0.1"),
-    port=int(os.getenv("DEVONBOARD_MCP_PORT", "8002")),
+    "clocket-ai",
+    host=os.getenv("CLOCKET_AI_MCP_HOST", "127.0.0.1"),
+    port=int(os.getenv("CLOCKET_AI_MCP_PORT", "8002")),
 )
 
 _CLIENT: Client | None = None
@@ -189,7 +189,7 @@ def update_onboarding_task(
 
 
 if __name__ == "__main__":
-    mcp.run(transport=os.getenv("DEVONBOARD_MCP_TRANSPORT", "stdio"))
+    mcp.run(transport=os.getenv("CLOCKET_AI_MCP_TRANSPORT", "stdio"))
 
 
 __all__ = [

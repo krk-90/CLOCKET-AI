@@ -1,4 +1,4 @@
--- DevOnboard AI: onboarding_tasks and onboarding_progress tables
+-- Clocket AI: onboarding_tasks and onboarding_progress tables
 -- Idempotent — safe to run multiple times.
 
 create table if not exists public.onboarding_tasks (

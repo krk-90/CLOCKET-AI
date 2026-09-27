@@ -63,19 +63,19 @@ export async function apiFetch(path, options = {}, token = "") {
 
 function AuthProvider({ children }) {
   const [token, setToken] = React.useState(
-    () => localStorage.getItem("devonboard_token") || ""
+    () => localStorage.getItem("clocket_ai_token") || ""
   );
   const [user, setUser] = React.useState(null);
   const [authLoading, setAuthLoading] = React.useState(true);
 
   const login = (accessToken, userData = null) => {
-    localStorage.setItem("devonboard_token", accessToken);
+    localStorage.setItem("clocket_ai_token", accessToken);
     setToken(accessToken);
     if (userData) setUser(userData);
   };
 
   const logout = () => {
-    localStorage.removeItem("devonboard_token");
+    localStorage.removeItem("clocket_ai_token");
     setToken("");
     setUser(null);
   };

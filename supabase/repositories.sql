@@ -1,4 +1,4 @@
--- DevOnboard AI: repositories table
+-- Clocket AI: repositories table
 -- Idempotent — safe to run multiple times.
 
 create table if not exists public.repositories (

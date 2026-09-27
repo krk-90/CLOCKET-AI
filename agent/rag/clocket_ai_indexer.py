@@ -1,4 +1,4 @@
-"""Repository-scoped RAG indexer for DevOnboard AI.
+"""Repository-scoped RAG indexer for Clocket AI.
 
 Indexes repository source files into Supabase pgvector with:
 - user_id (required, for user isolation)

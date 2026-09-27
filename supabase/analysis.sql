@@ -1,4 +1,4 @@
--- DevOnboard AI: repository_analysis table
+-- Clocket AI: repository_analysis table
 -- Idempotent — safe to run multiple times.
 
 create table if not exists public.repository_analysis (

@@ -1,5 +1,5 @@
 -- RAG documents with pgvector similarity search.
--- Extended for DevOnboard AI: added repository_id, file_path, language, chunk_type, commit_sha.
+-- Extended for Clocket AI: added repository_id, file_path, language, chunk_type, commit_sha.
 -- Idempotent — safe to run multiple times.
 
 create extension if not exists vector;

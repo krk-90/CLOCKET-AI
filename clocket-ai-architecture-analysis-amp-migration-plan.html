@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>DevOnboard AI — Migration Analysis</title>
+<title>Clocket AI — Migration Analysis</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, "Segoe UI", system-ui, sans-serif; font-size: 14px; line-height: 1.65; color: #1f2328; background: #ffffff; padding: 32px 16px 64px; }
@@ -43,8 +43,8 @@
 <body>
 <div class="page">
 
-<h1>DevOnboard AI — Architecture Analysis &amp; Migration Plan</h1>
-<p class="subtitle">Codebase inspection of CLOCKET-AI / Personal Assistant · Transformation roadmap to DevOnboard AI</p>
+<h1>Clocket AI — Architecture Analysis &amp; Migration Plan</h1>
+<p class="subtitle">Codebase inspection of CLOCKET-AI / Personal Assistant · Transformation roadmap to Clocket AI</p>
 
 
 <div class="section">
@@ -118,7 +118,7 @@
     <span class="badge badge-green">KEEP</span>
     <ul>
       <li><code>app/core/tracing.py</code> — <code>trace_config()</code>, <code>tracing_enabled()</code></li>
-      <li>Update service name tag to "devonboard-ai"</li>
+      <li>Update service name tag to "clocket-ai"</li>
     </ul>
   </div>
   <div class="card">
@@ -169,13 +169,13 @@
   <tr><th>Component</th><th>Change</th></tr>
   <tr><td><code>agent/rag/retriever/retrieval.py</code></td><td>Add <code>repository_id</code> column to index/search; update <code>match_rag_documents</code> RPC to filter by <code>user_id + repository_id</code></td></tr>
   <tr><td><code>agent/rag/loading.py</code></td><td>Extend supported suffixes to cover more languages (Java, Go, C++, Kotlin, etc.); add file size guard</td></tr>
-  <tr><td><code>agent/rag/generator/generation.py</code></td><td>Format source citations as structured file references for DevOnboard Q&amp;A</td></tr>
+  <tr><td><code>agent/rag/generator/generation.py</code></td><td>Format source citations as structured file references for Clocket AI Q&amp;A</td></tr>
   <tr><td><code>app/main.py</code></td><td>Register new routers: <code>/repositories</code>, <code>/analysis</code>, <code>/onboarding</code></td></tr>
-  <tr><td><code>app/core/tracing.py</code></td><td>Update service tag from "personal-assistant" to "devonboard-ai"</td></tr>
-  <tr><td><code>app/services/chat_services.py</code></td><td>Add DevOnboard-specific Q&amp;A path that bypasses orchestrator routing (direct RAG with repo filter)</td></tr>
+  <tr><td><code>app/core/tracing.py</code></td><td>Update service tag from "personal-assistant" to "clocket-ai"</td></tr>
+  <tr><td><code>app/services/chat_services.py</code></td><td>Add Clocket AI-specific Q&amp;A path that bypasses orchestrator routing (direct RAG with repo filter)</td></tr>
   <tr><td><code>supabase/rag.sql</code></td><td>Add <code>repository_id</code>, <code>file_path</code>, <code>language</code>, <code>chunk_type</code>, <code>commit_sha</code> columns; update indexes and RPC</td></tr>
   <tr><td><code>render.yaml</code></td><td>Add <code>GITHUB_TOKEN</code>, <code>GITHUB_MCP_*</code> env vars; rename service</td></tr>
-  <tr><td><code>.env.example</code></td><td>Add new env vars for GitHub MCP and DevOnboard config</td></tr>
+  <tr><td><code>.env.example</code></td><td>Add new env vars for GitHub MCP and Clocket AI config</td></tr>
   <tr><td><code>app/frontend/src/main.jsx</code></td><td>Replace with full multi-page React dashboard (9 pages)</td></tr>
   <tr><td><code>app/frontend/package.json</code></td><td>Add react-router-dom, recharts / d3 for architecture graph</td></tr>
 </table>
@@ -192,7 +192,7 @@
   <tr><td>Setup guide generator</td><td><code>agent/analysis/setup_guide.py</code></td><td>Evidence-based setup steps</td></tr>
   <tr><td>Starter task generator</td><td><code>agent/analysis/task_generator.py</code></td><td>Tasks grounded in real files</td></tr>
   <tr><td>GitHub MCP client</td><td><code>mcp_server/server/github_server.py</code></td><td>Official GitHub MCP server adapter</td></tr>
-  <tr><td>DevOnboard MCP tools</td><td><code>mcp_server/devonboard_tools.py</code></td><td>save_repository_analysis, get_onboarding_progress, update_onboarding_task</td></tr>
+  <tr><td>Clocket AI MCP tools</td><td><code>mcp_server/clocket_ai_tools.py</code></td><td>save_repository_analysis, get_onboarding_progress, update_onboarding_task</td></tr>
   <tr><td>Repository API route</td><td><code>app/routes/repositories.py</code></td><td>CRUD for repositories table</td></tr>
   <tr><td>Analysis API route</td><td><code>app/routes/analysis.py</code></td><td>Trigger analysis, get results, status polling</td></tr>
   <tr><td>Onboarding API route</td><td><code>app/routes/onboarding.py</code></td><td>Tasks, progress, Q&amp;A endpoints</td></tr>
@@ -343,14 +343,14 @@ Updated RPC: match_rag_documents now accepts optional match_repository_id
   <tr><td>mcp-server-git</td><td><span class="badge badge-green">KEEP</span></td><td>Git chat agent — git status, diff, log, branches</td></tr>
   <tr><td>Task MCP (mcp_server/tools.py)</td><td><span class="badge badge-green">KEEP</span></td><td>General task manager, onboarding task status updates</td></tr>
   <tr><td><strong>GitHub MCP Server (official)</strong></td><td><span class="badge badge-blue">ADD</span></td><td>Repository info, tree, file content, code search, commits, PRs</td></tr>
-  <tr><td><strong>DevOnboard MCP (mcp_server/devonboard_tools.py)</strong></td><td><span class="badge badge-blue">ADD</span></td><td>save_repository_analysis, get_onboarding_progress, update_onboarding_task, analyze_repository trigger</td></tr>
+  <tr><td><strong>Clocket AI MCP (mcp_server/clocket_ai_tools.py)</strong></td><td><span class="badge badge-blue">ADD</span></td><td>save_repository_analysis, get_onboarding_progress, update_onboarding_task, analyze_repository trigger</td></tr>
 </table>
 
 <div class="callout">
   <strong>GitHub MCP usage:</strong> The official <code>github/github-mcp-server</code> Docker image is used via <code>MultiServerMCPClient</code> (same pattern as mcp-server-git). It provides: <code>get_repository</code>, <code>get_file_contents</code>, <code>get_tree</code>, <code>search_code</code>, <code>list_commits</code>, <code>list_branches</code>, <code>list_pull_requests</code>. No custom tool is built for functionality already in GitHub MCP.
 </div>
 
-<h3>DevOnboard-specific MCP tools (new)</h3>
+<h3>Clocket AI-specific MCP tools (new)</h3>
 <ul>
   <li><code>analyze_repository(github_url, user_id)</code> — trigger full pipeline</li>
   <li><code>save_repository_analysis(repository_id, analysis_json)</code> — persist structured analysis</li>
@@ -428,8 +428,8 @@ conditional edges skip to persist_results on failure.
 </div>
 
 <div class="phase">
-  <div class="phase-title">Phase 3 — DevOnboard MCP + GitHub MCP <span class="badge badge-blue">New file + minimal existing change</span></div>
-  <p>Add <code>mcp_server/devonboard_tools.py</code>. Add <code>mcp_server/server/github_server.py</code> (GitHub MCP adapter). Keep <code>mcp_server/tools.py</code> unchanged.</p>
+  <div class="phase-title">Phase 3 — Clocket AI MCP + GitHub MCP <span class="badge badge-blue">New file + minimal existing change</span></div>
+  <p>Add <code>mcp_server/clocket_ai_tools.py</code>. Add <code>mcp_server/server/github_server.py</code> (GitHub MCP adapter). Keep <code>mcp_server/tools.py</code> unchanged.</p>
 </div>
 
 <div class="phase">
@@ -463,7 +463,7 @@ conditional edges skip to persist_results on failure.
 </div>
 
 <div class="callout callout-green" style="margin-top:16px">
-  <strong>Zero-regression guarantee:</strong> All existing routes (/auth, /chat, /rag, /health) and their underlying agents remain completely functional. New features are additive only. The existing chat experience is preserved alongside the new DevOnboard features.
+  <strong>Zero-regression guarantee:</strong> All existing routes (/auth, /chat, /rag, /health) and their underlying agents remain completely functional. New features are additive only. The existing chat experience is preserved alongside the new Clocket AI features.
 </div>
 </div>
 
@@ -476,7 +476,7 @@ conditional edges skip to persist_results on failure.
   <tr><td><code>GITHUB_MCP_TOOL_FILTER</code></td><td>No</td><td>Comma-list of allowed GitHub MCP tools (read-only subset)</td></tr>
   <tr><td><code>ANALYSIS_MAX_FILE_SIZE_KB</code></td><td>No</td><td>Max file size to index (default 500 KB)</td></tr>
   <tr><td><code>ANALYSIS_MAX_FILES</code></td><td>No</td><td>Max files to index per repo (default 200)</td></tr>
-  <tr><td><code>LANGSMITH_PROJECT</code></td><td>No</td><td>Update to <code>devonboard-ai</code></td></tr>
+  <tr><td><code>LANGSMITH_PROJECT</code></td><td>No</td><td>Update to <code>clocket-ai</code></td></tr>
 </table>
 </div>
 

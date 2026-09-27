@@ -1,4 +1,4 @@
-"""Deterministic repository scanner for DevOnboard AI.
+"""Deterministic repository scanner for Clocket AI.
 
 Performs static analysis of a repository to detect:
 - Programming languages

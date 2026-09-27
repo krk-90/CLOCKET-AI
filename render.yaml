@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: devonboard-ai
+    name: clocket-ai
     runtime: docker
     plan: free
     dockerfilePath: ./Dockerfile
@@ -33,8 +33,8 @@ services:
       - key: GITHUB_MCP_ALLOW_WRITE
         value: "false"
 
-      # === DevOnboard Analysis ===
-      - key: DEVONBOARD_LLM_MODEL
+      # === Clocket AI Analysis ===
+      - key: CLOCKET_AI_LLM_MODEL
         value: "openai/gpt-oss-20b"
       - key: ANALYSIS_MAX_FILE_SIZE_KB
         value: "500"
@@ -42,7 +42,7 @@ services:
         value: "200"
 
       # === CORS — set to your Render service URL in the dashboard ===
-      # e.g. https://devonboard-ai.onrender.com
+      # e.g. https://clocket-ai.onrender.com
       - key: CORS_ALLOWED_ORIGINS
         sync: false
 
@@ -58,7 +58,7 @@ services:
       - key: LANGSMITH_API_KEY
         sync: false
       - key: LANGSMITH_PROJECT
-        value: devonboard-ai
+        value: clocket-ai
       - key: LANGSMITH_ENDPOINT
         value: https://api.smith.langchain.com
 

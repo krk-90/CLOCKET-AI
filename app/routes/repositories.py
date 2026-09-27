@@ -1,4 +1,4 @@
-"""Repository management routes for DevOnboard AI."""
+"""Repository management routes for Clocket AI."""
 from __future__ import annotations
 
 import logging

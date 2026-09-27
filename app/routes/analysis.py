@@ -1,4 +1,4 @@
-"""Analysis trigger and results routes for DevOnboard AI."""
+"""Analysis trigger and results routes for Clocket AI."""
 from __future__ import annotations
 
 import asyncio
@@ -251,7 +251,7 @@ async def codebase_qa(
         raise HTTPException(400, "Question must not be empty")
 
     try:
-        from agent.rag.devonboard_qa import ask_codebase_question
+        from agent.rag.clocket_ai_qa import ask_codebase_question
         result = await ask_codebase_question(
             question=question,
             user_id=user_id,
