@@ -41,9 +41,12 @@ export async function apiFetch(path, options = {}, token = "") {
   const payload = await res.json().catch(() => ({}));
 
   if (res.status === 401) {
-    // Token expired — trigger logout via event
-    window.dispatchEvent(new Event("auth:expired"));
-    throw new Error(payload.detail || "Session expired. Please sign in again.");
+    // Only treat as an expired session for authenticated routes, not auth endpoints
+    const isAuthEndpoint = path.startsWith("/auth/login") || path.startsWith("/auth/signup");
+    if (!isAuthEndpoint) {
+      window.dispatchEvent(new Event("auth:expired"));
+    }
+    throw new Error(payload.detail || (isAuthEndpoint ? "Invalid email or password." : "Session expired. Please sign in again."));
   }
 
   if (!res.ok) {
