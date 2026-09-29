@@ -7,6 +7,19 @@
 
 ---
 
+## Why This Project Is Technically Interesting
+
+Clocket AI combines deterministic repository analysis with LLM reasoning instead of asking an LLM to infer everything from raw source code.
+
+- **Deterministic analysis first:** detects languages, frameworks, APIs, infrastructure and configuration before LLM reasoning.
+- **LangGraph orchestration:** separates validation, scanning, architecture analysis, setup generation, task generation, RAG indexing and persistence into explicit workflow nodes.
+- **Repository-grounded generation:** setup guidance and starter tasks are generated from evidence found in the actual repository.
+- **Repository-scoped RAG:** retrieval is filtered by both user and repository identifiers to prevent cross-user and cross-repository leakage.
+- **Security-aware AI:** repository content is treated as untrusted input and GitHub access is read-only by default.
+- **Developer tooling focus:** the system turns an unfamiliar repository into an actionable onboarding plan rather than only producing a summary.
+
+---
+
 ## Table of Contents
 
 1. [Problem](#1-problem)
