@@ -552,3 +552,15 @@ Visit **http://localhost:8000/docs** for the full interactive API reference.
 ## License
 
 Licensed under the [Apache License 2.0](LICENSE).
+
+
+## Evaluation
+
+This repository includes reproducible evaluation tooling under `evaluation/`. Metrics are computed from real retrieval/API runs rather than hard-coded values.
+
+Run:
+```bash
+python evaluation/run_rag_eval.py
+```
+
+Reported metrics include Hit Rate@K, Recall@K, Precision@K, MRR, and p50/p95 latency where applicable. Results are written to an evaluation results JSON file and should only be used for reporting after running the evaluation against the current system.
