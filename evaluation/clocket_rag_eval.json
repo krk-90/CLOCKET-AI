@@ -1,0 +1,64 @@
+{
+  "k": 5,
+  "cases": [
+    {
+      "id": "C1",
+      "question": "Where is the repository Q&A pipeline implemented?",
+      "relevant": [
+        "clocket_ai_qa.py",
+        "pipeline.py"
+      ]
+    },
+    {
+      "id": "C2",
+      "question": "How are repository documents loaded and chunked?",
+      "relevant": [
+        "loading.py"
+      ]
+    },
+    {
+      "id": "C3",
+      "question": "How does the local retriever rank chunks?",
+      "relevant": [
+        "retrieval.py"
+      ]
+    },
+    {
+      "id": "C4",
+      "question": "How is repository architecture analyzed?",
+      "relevant": [
+        "architecture.py"
+      ]
+    },
+    {
+      "id": "C5",
+      "question": "How does the repository scanner discover files?",
+      "relevant": [
+        "scanner.py"
+      ]
+    },
+    {
+      "id": "C6",
+      "question": "How are starter tasks generated?",
+      "relevant": [
+        "task_generator.py"
+      ]
+    },
+    {
+      "id": "C7",
+      "question": "How are repository chunks stored and retrieved for users?",
+      "relevant": [
+        "clocket_ai_qa.py",
+        "retrieval.py"
+      ]
+    },
+    {
+      "id": "C8",
+      "question": "How does the application prevent cross-repository data leakage?",
+      "relevant": [
+        "clocket_ai_qa.py",
+        "retrieval.py"
+      ]
+    }
+  ]
+}
