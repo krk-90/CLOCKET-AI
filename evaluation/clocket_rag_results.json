@@ -1,0 +1,155 @@
+{
+  "summary": {
+    "hit_rate@5": 0.75,
+    "recall@5": 0.5625,
+    "precision@5": 0.15000000000000002,
+    "mrr": 0.75,
+    "latency_p50_ms": 0.13,
+    "latency_p95_ms": 0.6245
+  },
+  "cases": [
+    {
+      "id": "C1",
+      "question": "Where is the repository Q&A pipeline implemented?",
+      "retrieved": [
+        "clocket_ai_qa.py"
+      ],
+      "retrieved_sources": [
+        "index-cgfa72ra.js",
+        "index-cgfa72ra.js",
+        "index-cgfa72ra.js",
+        "task_generator.py",
+        "clocket_ai_qa.py"
+      ],
+      "relevant": [
+        "clocket_ai_qa.py",
+        "pipeline.py"
+      ],
+      "latency_ms": 0.88
+    },
+    {
+      "id": "C2",
+      "question": "How are repository documents loaded and chunked?",
+      "retrieved": [],
+      "retrieved_sources": [
+        "index-cgfa72ra.js",
+        "index-cgfa72ra.js",
+        "index-cgfa72ra.js",
+        "task_generator.py",
+        "clocket_ai_indexer.py"
+      ],
+      "relevant": [
+        "loading.py"
+      ],
+      "latency_ms": 0.15
+    },
+    {
+      "id": "C3",
+      "question": "How does the local retriever rank chunks?",
+      "retrieved": [
+        "retrieval.py"
+      ],
+      "retrieved_sources": [
+        "pipeline.py",
+        "retrieval.py",
+        "clocket_ai_qa.py",
+        "index-cgfa72ra.js",
+        "index-cgfa72ra.js"
+      ],
+      "relevant": [
+        "retrieval.py"
+      ],
+      "latency_ms": 0.11
+    },
+    {
+      "id": "C4",
+      "question": "How is repository architecture analyzed?",
+      "retrieved": [
+        "architecture.py"
+      ],
+      "retrieved_sources": [
+        "index-cgfa72ra.js",
+        "index-cgfa72ra.js",
+        "index-cgfa72ra.js",
+        "task_generator.py",
+        "architecture.py"
+      ],
+      "relevant": [
+        "architecture.py"
+      ],
+      "latency_ms": 0.12
+    },
+    {
+      "id": "C5",
+      "question": "How does the repository scanner discover files?",
+      "retrieved": [],
+      "retrieved_sources": [
+        "index-cgfa72ra.js",
+        "index-cgfa72ra.js",
+        "index-cgfa72ra.js",
+        "architecture.py",
+        "task_generator.py"
+      ],
+      "relevant": [
+        "scanner.py"
+      ],
+      "latency_ms": 0.11
+    },
+    {
+      "id": "C6",
+      "question": "How are starter tasks generated?",
+      "retrieved": [
+        "task_generator.py"
+      ],
+      "retrieved_sources": [
+        "index-cgfa72ra.js",
+        "index-cgfa72ra.js",
+        "index-cgfa72ra.js",
+        "task_generator.py",
+        "clocket_ai_tools.py"
+      ],
+      "relevant": [
+        "task_generator.py"
+      ],
+      "latency_ms": 0.08
+    },
+    {
+      "id": "C7",
+      "question": "How are repository chunks stored and retrieved for users?",
+      "retrieved": [
+        "clocket_ai_qa.py"
+      ],
+      "retrieved_sources": [
+        "clocket_ai_qa.py",
+        "index-cgfa72ra.js",
+        "index-cgfa72ra.js",
+        "index-cgfa72ra.js",
+        "clocket_ai_indexer.py"
+      ],
+      "relevant": [
+        "clocket_ai_qa.py",
+        "retrieval.py"
+      ],
+      "latency_ms": 0.15
+    },
+    {
+      "id": "C8",
+      "question": "How does the application prevent cross-repository data leakage?",
+      "retrieved": [
+        "clocket_ai_qa.py"
+      ],
+      "retrieved_sources": [
+        "index-cgfa72ra.js",
+        "index-cgfa72ra.js",
+        "index-cgfa72ra.js",
+        "clocket_ai_qa.py",
+        "index-cgfa72ra.js"
+      ],
+      "relevant": [
+        "clocket_ai_qa.py",
+        "retrieval.py"
+      ],
+      "latency_ms": 0.14
+    }
+  ]
+}

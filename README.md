@@ -560,7 +560,20 @@ This repository includes reproducible evaluation tooling under `evaluation/`. Me
 
 Run:
 ```bash
-python evaluation/run_rag_eval.py
+python -m evaluation.run_rag_eval
 ```
 
-Reported metrics include Hit Rate@K, Recall@K, Precision@K, MRR, and p50/p95 latency where applicable. Results are written to an evaluation results JSON file and should only be used for reporting after running the evaluation against the current system.
+Results are written to `evaluation/clocket_rag_results.json`.
+
+### RAG Retrieval — latest results (k=5, 8 test cases)
+
+| Metric | Value |
+|--------|-------|
+| Hit Rate@5 | **0.75** |
+| Recall@5 | **0.5625** |
+| Precision@5 | 0.15 |
+| MRR | **0.75** |
+| Latency p50 | 0.13 ms |
+| Latency p95 | 0.62 ms |
+
+The local retriever surfaces at least one relevant document in the top-5 for 75 % of queries with sub-millisecond latency. MRR of 0.75 indicates relevant documents rank near the top when found. Recall is lower for multi-relevant queries (cases with two expected source files), which is the main area for future improvement.
